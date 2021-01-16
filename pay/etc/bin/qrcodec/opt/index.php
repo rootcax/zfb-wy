@@ -16,6 +16,8 @@ class index {
         $state = 5;
         if ($step == 1) {
             $state = 0;
+        } else if ($step == 2) {
+            $state = 3;
         }
         //$order = $mysql->select("select A.*,B.qrcode,B.bank,B.post_url,B.h5_link,C.bank_token,C.bank_name from mi_takes as A INNER JOIN mi_qrcode_link as B on A.qrcode_id = B.id left join mi_bank as C on A.bank_code=C.bank_code where A.num='{$num}' and B.state={$state} limit 1");
         $order = $mysql->select("select log.*,b.bank_name,b.bank_token,b.bank_code from sk_order log left join cnf_bank b on log.ma_bank_id=b.id where order_sn='{$sn}' and ma_qrcode_status={$state}");
@@ -31,13 +33,13 @@ class index {
                 $qrcode_array['money'] = floatval($order['money']);
                 $qrcode_array['money_res'] = $order['real_money'];
                 $qrcode_array['qrcode'] = "";
-                $qrcode_array['mark'] = $order['remark'];
+                $qrcode_array['mark'] = $sn;
                 $qrcode_array['typec'] = $order['ptype'];
-                //$qrcode_array['info'] = $order['info'];
+                $qrcode_array['info'] = $sn;
                 $qrcode_array['device'] = $order['device'];
                 $qrcode_array['bank'] = $order['bank_token'];
                 $qrcode_array['bank_name'] = $order['bank_name'];
-                $qrcode_array['create_time'] = time();
+                $qrcode_array['create_time'] = $order['create_time'];
                 $client = stream_socket_client('tcp://127.0.0.1:8806', $errno, $errmsg, 1);
                 if (!$client)
                     functions::json(-1, "发送失败");
@@ -53,7 +55,7 @@ class index {
             functions::import_var('create_qrcode', ['data' => $order]);
 
         } else if ($step == 2) {
-            if ($order['qrcode'] != "" && $order['post_url'] != "") {
+            if ($order['ma_qrcode'] != "" && $order['post_url'] != "") {
                 if ($order['bank_code'] == "CCB" && functions::isMobile()) {
                     functions::import_var('goCCBPay', array('data' => $order));
                 } else {

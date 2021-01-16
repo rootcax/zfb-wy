@@ -506,7 +506,7 @@ class index {
         //$token = $data['token'];
         $mysql = functions::open_mysql();
 
-        $land = $mysql->query('sk_ma', "uid={$userid}", "id,uid as userid,ma_account as username,mtype_id as typec");
+        $land = $mysql->query('sk_ma', "uid={$userid} and status < 99", "id,uid as userid,ma_account as username,mtype_id as typec");
         //$encode_land = str_replace("+", "@", functions::encode(json_encode($land), AUTH_KEY, 1));
         functions::json(200, '获取成功', $land);
     }
@@ -892,7 +892,7 @@ class index {
             //检查是否存在待回收二维码
             $time = intval(time() - 600);
             //将过期的订单pass
-            $max_orverdue = $mysql->select("select id,mark,land_id,payc,qr_type,create_time from mi_takes where create_time<{$time} and state=1 and payc=26");
+            $max_orverdue = $mysql->select("select id,mark,land_id,payc,qr_type,create_time from mi_takes where create_time<{$time} and state=1 and payc=303");
             if (count($max_orverdue) > 0) {
                 foreach ($max_orverdue as $var) {
                     $mysql->update("takes", array("state" => 3, 'overtime' => time()), "id={$var['id']}"); //将过期的订单pass

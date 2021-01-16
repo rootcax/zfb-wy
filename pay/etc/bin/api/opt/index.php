@@ -682,7 +682,7 @@ class index {
         $bank_sql = "select * from mi_bank where bank_type<>{$bank_type} and status=1";
         $banks = $mysql->select($bank_sql);
         //分析支付宝/微信/QQ通道
-        if ($order['payc'] == 26)
+        if ($order['payc'] == 303)
             $temp = $wap . 'bank2alipay';
 
         //拉取二维码,渲染界面

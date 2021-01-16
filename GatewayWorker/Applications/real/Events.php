@@ -39,8 +39,7 @@ class Events {
      */
     public static function onConnect($client_id) {
         sleep(1);
-        //var_export($client_id);
-        //echo "\n";
+
         $session[$client_id] = Gateway::getSession($client_id);
         if (!empty($session[$client_id])) {
             //if (count(Gateway::getClientIdByUid($session['userid'])) > 0) {
@@ -48,6 +47,13 @@ class Events {
             //}
             Gateway::bindUid($client_id, $session[$client_id]['userid']);
             //var_export(Gateway::getClientIdByUid($session['userid']));
+
+            $path = 'log/' . date('Ymd') . '/';
+            $filename = 'onConnect.log';
+            if (!is_dir($path)) {
+                $flag = mkdir($path, 0777, true);
+            }
+            file_put_contents($path . $filename, date('Y-m-d H:i:s') . 'client_id = ' . var_export($session[$client_id], true));
         }
 
         //Gateway::sendToAll($session['userid']." 进入");
@@ -93,6 +99,14 @@ class Events {
                         $_SESSION['WY_landid'] = $landid;
                 }
                 $_SESSION['type'] = $type;
+                if (!empty($landid)) {
+                    $state = $message_data['State'];
+                    $queue_time = time();
+                    if (intval($state == 1)) {
+                        $queue_time += 365 * 86400;
+                    }
+                    $db->query("UPDATE `sk_ma` SET status={$state},queue_time={$queue_time} WHERE id= '{$landid}'");
+                }
             }
         } else {
             switch ($message_data['type']) {
@@ -140,14 +154,14 @@ class Events {
                         $typec = $qrcode_array['typec'];
                         if ($qrcode != "" && $qrcode != null) {
                             $bank_name = $qrcode_array['bank_name'];
-                            if ($bank == "CMB" || $bank == "CCB") {
+                            if ($bank_name == "招商银行" || $bank_name == "中国建设银行") {
                                 if (!empty($h5_link)) {
-                                    $row_count = $db->query("UPDATE `sk_order` SET ma_qrcode_status = '{$state}',`h5_link` = '{$h5_link}' WHERE remark= '{$remark}'");
+                                    $row_count = $db->query("UPDATE sk_order SET ma_qrcode_status={$state},h5_link='{$h5_link}' WHERE order_sn='{$remark}'");
                                 } else {
-                                    $row_count = $db->query("UPDATE `sk_order` SET qrcode='{$qrcode}',post_url='{$post_url}' WHERE remark= '{$remark}' and ma_qrcode_status=0");
+                                    $row_count = $db->query("UPDATE sk_order SET ma_qrcode='{$qrcode}',post_url='{$post_url}' WHERE order_sn='{$remark}'");
                                 }
                             } else {
-                                $row_count = $db->query("UPDATE `sk_order` SET ma_qrcode_status= '{$state}',qrcode='{$qrcode}',post_url='{$post_url}' WHERE remark= '{$remark}' and state=0");
+                                $row_count = $db->query("UPDATE sk_order SET ma_qrcode_status={$state},ma_qrcode='{$qrcode}',post_url='{$post_url}' WHERE order_sn='{$remark}'");
                             }
 
                             if ($row_count) {
@@ -169,7 +183,7 @@ class Events {
                     $ye['tradeTime'] = $order['tradeTime'] / 1000;
                     $ye['landid'] = $order['landid'];
                     $ye['payTime'] = time();
-                    $ye['payTypec'] = 26;
+                    $ye['payTypec'] = 303;
                     if ($ye['payTime'] - $ye['tradeTime'] > 600) {
                         continue;
                     }
