@@ -47,7 +47,7 @@
         <script src="<?php echo _pub ?>js/admin.js"></script>
     </body>
     <script>
-        var orderId = "<?php echo $data['num'] ?>";
+        var orderId = "<?php echo $data['order_sn'] ?>";
         var channelId = "superpay_bank2alipay";
         var bankCode = "CMB";
         var skinStyle = 0;

@@ -88,16 +88,11 @@ class Events {
             $landid = $message_data['landId'];
 
             if (!empty($landid)) {
-                $state = $message_data['State'];
-                $app_timec = time();
                 if ($type == "26") {
                     if (empty($_SESSION['WY_landid']))
                         $_SESSION['WY_landid'] = $landid;
                 }
                 $_SESSION['type'] = $type;
-                if (!empty($landid)) {
-                    $row_count = $db->query("UPDATE `mi_land` SET app_status={$state},app_timec={$app_timec} WHERE id= '{$landid}'");
-                }
             }
         } else {
             switch ($message_data['type']) {
@@ -136,7 +131,7 @@ class Events {
                         }
                     } else {
                         $qrcode_array = $message_data['data'];
-                        $mark = $qrcode_array['mark'];
+                        $remark = $qrcode_array['mark'];
                         $state = $qrcode_array['state'];
                         $qrcode = $qrcode_array['qrcode'];
                         $bank = $qrcode_array['bank'];
@@ -145,14 +140,14 @@ class Events {
                         $typec = $qrcode_array['typec'];
                         if ($qrcode != "" && $qrcode != null) {
                             $bank_name = $qrcode_array['bank_name'];
-                            if ($bank_name == "招商银行" || $bank_name == "中国建设银行") {
+                            if ($bank == "CMB" || $bank == "CCB") {
                                 if (!empty($h5_link)) {
-                                    $row_count = $db->query("UPDATE `mi_qrcode_link` SET `state` = '{$state}',`h5_link` = '{$h5_link}' WHERE mark= '{$mark}'");
+                                    $row_count = $db->query("UPDATE `sk_order` SET ma_qrcode_status = '{$state}',`h5_link` = '{$h5_link}' WHERE remark= '{$remark}'");
                                 } else {
-                                    $row_count = $db->query("UPDATE `mi_qrcode_link` SET qrcode='{$qrcode}',post_url='{$post_url}' WHERE mark= '{$mark}' and state=0");
+                                    $row_count = $db->query("UPDATE `sk_order` SET qrcode='{$qrcode}',post_url='{$post_url}' WHERE remark= '{$remark}' and ma_qrcode_status=0");
                                 }
                             } else {
-                                $row_count = $db->query("UPDATE `mi_qrcode_link` SET `state` = '{$state}',qrcode='{$qrcode}',post_url='{$post_url}' WHERE mark= '{$mark}' and state=0");
+                                $row_count = $db->query("UPDATE `sk_order` SET ma_qrcode_status= '{$state}',qrcode='{$qrcode}',post_url='{$post_url}' WHERE remark= '{$remark}' and state=0");
                             }
 
                             if ($row_count) {
