@@ -88,7 +88,7 @@ class Events {
             $landid = $message_data['landId'];
 
             if (!empty($landid)) {
-                if ($type == "26") {
+                if ($type == "303") {
                     if (empty($_SESSION['WY_landid']))
                         $_SESSION['WY_landid'] = $landid;
                 }
@@ -121,7 +121,7 @@ class Events {
                         for ($i = 0; $i < count($client_id); $i++) {
                             $s_client = Gateway::getSession($client_id[$i]);
                             if ($s_client['type'] == $typec) {
-                                if ($typec == "26") {
+                                if ($typec == "303") {
                                     if ($s_client['WY_landid'] == $qr_landid) {
                                         Gateway::sendToClient($client_id[$i], $message);
                                         break;

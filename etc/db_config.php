@@ -18,7 +18,7 @@ define('DB_PWD', 'woaini520DSS@wepay');
 //数据库
 define('DB_NAME', 'xianyu');
 //前缀
-define('DB_PREFIX', 'mi_');
+define('DB_PREFIX', '');
 //编码
 define('DB_CHAR', 'utf8');
 //cookies的key 如果修改，全站所有用户全部掉线

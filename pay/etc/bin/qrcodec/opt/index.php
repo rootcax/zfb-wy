@@ -29,10 +29,10 @@ class index {
                 $qrcode_array['userid'] = $order['muid'];
                 $qrcode_array['land_id'] = $order['ma_id'];
                 $qrcode_array['money'] = floatval($order['money']);
-                //$qrcode_array['money_res'] = $order['money_index'];
+                $qrcode_array['money_res'] = $order['real_money'];
                 $qrcode_array['qrcode'] = "";
                 $qrcode_array['mark'] = $order['remark'];
-                $qrcode_array['typec'] = 26;//$order['payc'];
+                $qrcode_array['typec'] = $order['ptype'];
                 //$qrcode_array['info'] = $order['info'];
                 $qrcode_array['device'] = $order['device'];
                 $qrcode_array['bank'] = $order['bank_token'];

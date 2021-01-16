@@ -451,20 +451,20 @@ class index {
     function applogin() {
         $phone = functions::request('phone');
         if (empty($phone)) {
-            functions::json(5005, '手机号码不能为空');
+            functions::json(5005, '账号不能为空');
         }
-        if (!functions::isphone($phone))
-            functions::json(5001, '手机不正确');
         $mysql = functions::open_mysql();
-        $queryx = $mysql->query('users', "phone={$phone}");
-        if (!is_array($queryx[0]))
-            functions::json(5003, '该手机暂未注册');
+        $queryx = $mysql->query('sys_user', "account='{$phone}'");
+        $user = $queryx[0];
+        if (!is_array($user))
+            functions::json(5003, '账号暂未注册');
         //验证密码
-        $pwd = md5(functions::request('pwd') . $queryx[0]['token']);
-        if ($queryx[0]['pwd'] != $pwd)
+        $pwd = md5(functions::request('pwd'));
+        $pwd = sha1($pwd . 'Signsduihfnsk&5sdHwifjpWF@#TUIsfzl_sqyzt');
+        if ($user['password'] != $pwd)
             functions::json(5004, '密码不正确');
         //扩展功能接口
-        $this->login_extend($queryx[0]);
+        $this->login_extend($user);
         //保存session
         $ip = functions::get_client_ip();
 //        $userdata = str_replace("+", "@", functions::encode(json_encode(array(
@@ -475,14 +475,17 @@ class index {
         //          'time' => time(),
         //        "balance" => $queryx[0]['balance']
         //          )), AUTH_KEY));
+        $seed = md5(microtime() . 'uihfnsk&5sd' . mt_rand(100000, 999999));
+        $token = substr($seed, 8, 16);
+
         $userdata = array(
-            "id" => $queryx[0]['id'],
-            "phone" => $queryx[0]['phone'],
-            "token" => $queryx[0]['token'],
+            "id" => $user['id'],
+            "phone" => $user['account'],
+            "token" => $token,
             "ip" => $ip,
             'time' => time(),
-            "balance" => $queryx[0]['balance']);
-        //$mysql->update('users', array("ip" => $ip, "loginc" => time()), "id={$queryx[0]['id']}");
+            "balance" => $user['balance']);
+        $mysql->update('sys_user', array("login_ip" => $ip, "token" => $token), "id={$user['id']}");
         functions::json(200, '登录成功', $userdata);
     }
 
@@ -503,10 +506,7 @@ class index {
         //$token = $data['token'];
         $mysql = functions::open_mysql();
 
-        $queryx = $mysql->query('users', "phone='{$phone}' and id='{$userid}' and token='{$token}'");
-        if (!is_array($queryx[0]))
-            functions::json(5003, '该用户不存在');
-        $land = $mysql->query('land', "userid={$queryx[0]['id']}", "id,userid,username,typec,sdk");
+        $land = $mysql->query('sk_ma', "uid={$userid}", "id,uid as userid,ma_account as username,mtype_id as typec");
         //$encode_land = str_replace("+", "@", functions::encode(json_encode($land), AUTH_KEY, 1));
         functions::json(200, '获取成功', $land);
     }
