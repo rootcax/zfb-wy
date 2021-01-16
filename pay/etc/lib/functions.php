@@ -499,7 +499,7 @@ static function request($name, $method = 'all') {
 
     static function get_Config($name) {
         $mysql = self::open_mysql();
-        $query = $mysql->query("config", "name='{$name}'");
+        $query = $mysql->query("sys_config_2", "name='{$name}'");
         if (is_array($query[0])) {
             $data = json_decode($query[0]['value'], true);
             return $data;
