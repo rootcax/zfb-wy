@@ -18,9 +18,9 @@ class Db {
     public static $db = array(
         'host' => '127.0.0.1',
         'port' => 3306,
-        'user' => 'bank.wepay',
-        'password' => 'bank.wepay',
-        'dbname' => 'bank.wepay',
+        'user' => 'xianyu',
+        'password' => 'woaini520DSS@wepay',
+        'dbname' => 'xianyu',
         'charset' => 'utf8',
     );
 
