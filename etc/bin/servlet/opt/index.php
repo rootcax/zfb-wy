@@ -505,10 +505,85 @@ class index {
         //$phone = $data['phone'];
         //$token = $data['token'];
         $mysql = functions::open_mysql();
-
         $land = $mysql->query('sk_ma', "uid={$userid} and status < 99", "id,uid as userid,ma_account as username,mtype_id as typec");
         //$encode_land = str_replace("+", "@", functions::encode(json_encode($land), AUTH_KEY, 1));
         functions::json(200, '获取成功', $land);
+    }
+
+    function getNewOrder() {
+        $ma_id = functions::request('id');
+        $mysql = functions::open_mysql();
+        $order = $mysql->select("select log.*,b.bank_name,b.bank_token,b.bank_code from sk_order log left join cnf_bank b on log.ma_bank_id=b.id where ma_id={$ma_id} and ma_qrcode_status=0");
+        if (empty($order)) {
+            functions::json(-3, '暂时还没有订单');
+        }
+        $order = $order[0];
+        $mysql->update("sk_order", ["ma_qrcode_status" => 1], "id={$order['id']}");
+
+        $qrcode_array['state'] = 0;
+        $qrcode_array['userid'] = $order['muid'];
+        $qrcode_array['land_id'] = $order['ma_id'];
+        $qrcode_array['money'] = floatval($order['money']);
+        $qrcode_array['money_res'] = floatval($order['real_money']);
+        $qrcode_array['qrcode'] = "";
+        $qrcode_array['mark'] = $order['order_sn'];
+        $qrcode_array['typec'] = $order['ptype'];
+        $qrcode_array['info'] = $order['order_sn'];
+        //$qrcode_array['device'] = $order['device'];
+        $qrcode_array['bank'] = $order['bank_token'];
+        $qrcode_array['bank_name'] = $order['bank_name'];
+        $qrcode_array['create_time'] = $order['create_time'];
+        $return_data = [
+            'type' => 'qrcodec',
+            'data' => $qrcode_array
+        ];
+        functions::json(200, '获取成功', $return_data);
+    }
+
+    function updateOrder() {
+        $path = 'log/' . date('Ymd') . '/';
+        $filename = 'test.log';
+        if (!is_dir($path)) {
+            $flag = mkdir($path, 0777, true);
+        }
+
+        $remark = functions::request('mark');
+        $state = functions::request('state');
+        $bank_token = functions::request('bank');
+        $h5_link = functions::request('h5_link');
+        $post_url = functions::request('url');
+        $typec = functions::request('typec');
+        $qrcode = $_REQUEST['qrcode'];
+        $bank_name = $_REQUEST['bank_name'];
+        //$qrcode = str_replace(' ', '+', $qrcode);
+        //$qrcode = str_replace('\t', '+', $qrcode);
+        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-h5_link-' . $h5_link . '-----' . PHP_EOL, FILE_APPEND);
+        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-qrcode-' . $qrcode . '-----' . PHP_EOL, FILE_APPEND);
+        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-remark-' . $remark . '-----' . PHP_EOL, FILE_APPEND);
+        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-state-' . $state . '-----' . PHP_EOL, FILE_APPEND);
+        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-bank_name-' . $bank_name . '-----' . PHP_EOL, FILE_APPEND);
+
+        if ($qrcode != "" && $qrcode != null) {
+            $mysql = functions::open_mysql();
+            $row_count = 0;
+            if ($bank_name == "招商银行" || $bank_name == "中国建设银行") {
+                if (!empty($h5_link)) {
+                    $row_count = $mysql->update("sk_order", ["ma_qrcode_status" => $state, "h5_link" => $h5_link], "order_sn='{$remark}'");
+                } else {
+                    $row_count = $mysql->update("sk_order", ["ma_qrcode" => $qrcode, "post_url" => $post_url], "order_sn='{$remark}'");
+                }
+            } else {
+                $row_count = $mysql->update("sk_order", ["ma_qrcode_status" => $state, "ma_qrcode" => $qrcode, "post_url" => $post_url], "order_sn='{$remark}'");
+            }
+
+            if (empty($row_count)) {
+                functions::json(-1, '更新失败');
+            } else {
+                functions::json(200, '更新成功');
+            }
+        } else {
+            functions::json(-1, '更新失败, 参数不正确');
+        }
     }
 
     //上传用户二维码链接，保存到数据库

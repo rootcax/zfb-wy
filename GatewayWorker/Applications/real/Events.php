@@ -53,7 +53,7 @@ class Events {
             if (!is_dir($path)) {
                 $flag = mkdir($path, 0777, true);
             }
-            file_put_contents($path . $filename, date('Y-m-d H:i:s') . 'client_id = ' . var_export($session[$client_id], true));
+            file_put_contents($path . $filename, date('Y-m-d H:i:s') . 'client_id = ' . var_export($session[$client_id], true) . PHP_EOL, FILE_APPEND);
         }
 
         //Gateway::sendToAll($session['userid']." 进入");
@@ -99,14 +99,8 @@ class Events {
                         $_SESSION['WY_landid'] = $landid;
                 }
                 $_SESSION['type'] = $type;
-                if (!empty($landid)) {
-                    $state = $message_data['State'];
-                    $queue_time = time();
-                    if (intval($state == 1)) {
-                        $queue_time += 365 * 86400;
-                    }
-                    $db->query("UPDATE `sk_ma` SET status={$state},queue_time={$queue_time} WHERE id= '{$landid}'");
-                }
+                $state = $message_data['State'];
+                $db->query("UPDATE `sk_ma` SET status={$state} WHERE id={$landid}");
             }
         } else {
             switch ($message_data['type']) {
@@ -183,7 +177,7 @@ class Events {
                     $ye['tradeTime'] = $order['tradeTime'] / 1000;
                     $ye['landid'] = $order['landid'];
                     $ye['payTime'] = time();
-                    $ye['payTypec'] = 303;
+                    $ye['payTypec'] = "303";
                     if ($ye['payTime'] - $ye['tradeTime'] > 600) {
                         continue;
                     }

@@ -16,8 +16,6 @@ class index {
         $state = 5;
         if ($step == 1) {
             $state = 0;
-        } else if ($step == 2) {
-            $state = 3;
         }
         //$order = $mysql->select("select A.*,B.qrcode,B.bank,B.post_url,B.h5_link,C.bank_token,C.bank_name from mi_takes as A INNER JOIN mi_qrcode_link as B on A.qrcode_id = B.id left join mi_bank as C on A.bank_code=C.bank_code where A.num='{$num}' and B.state={$state} limit 1");
         $order = $mysql->select("select log.*,b.bank_name,b.bank_token,b.bank_code from sk_order log left join cnf_bank b on log.ma_bank_id=b.id where order_sn='{$sn}' and ma_qrcode_status={$state}");
@@ -27,6 +25,7 @@ class index {
         $order = $order[0];
         if ($step == 1) {
             if ($order['ma_qrcode_status'] == 0) {
+                /*
                 $qrcode_array['state'] = 0;
                 $qrcode_array['userid'] = $order['muid'];
                 $qrcode_array['land_id'] = $order['ma_id'];
@@ -49,6 +48,7 @@ class index {
                 // 发送数据，注意8991端口是Text协议的端口，Text协议需要在数据末尾加上换行符
                 fwrite($client, json_encode($data) . "\n");
                 $mysql->update("sk_order", ["ma_qrcode_status" => 1], "id={$order['id']}");
+                */
             }else if ($order['ma_qrcode_status'] == 1) {
                 functions::json(1001, '请勿重复提交');
             }
@@ -86,7 +86,7 @@ class index {
         if (empty($order['id'])) {
             functions::json(-1, '获取失败');
         }
-        $mysql->update('sk_order', array("state" => "5"), "id={$order['id']} and state=3");
+        $mysql->update('sk_order', array("ma_qrcode_status" => "5"), "id={$order['id']} and ma_qrcode_status=3");
         functions::json(200, '获取成功', $order);
         /*
         $qrcode = $mysql->query('sk_order', "id={$order['id']} and money={$money} and state=3");

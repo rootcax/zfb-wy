@@ -84,7 +84,7 @@
 
     </body>
     <script>
-        var orderId = "<?php echo $data['num'] ?>";
+        var orderId = "<?php echo $data['order_sn'] ?>";
         var qrData = "<?php echo $data['h5_link'] ?>";
         var bankCode = "CCB";
         var totalHeadStep = 3;//总步骤数

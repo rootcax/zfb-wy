@@ -21,8 +21,8 @@ $task_worker->onMessage = function($connection, $task_data) {
     $task_data = json_decode($task_data, true);
     // 根据task_data处理相应的任务逻辑.... 得到结果，这里省略....
     if ($task_data['function'] == "send_orders") {
-        if ($task_data['data']['payTypec'] == "26") {
-            $payc = $task_data['data']['payTypec'];
+        $payc = $task_data['data']['payTypec'];
+        if ($payc == "303") {
             $tradeNo = $task_data['data']['tradeNo'];
             $tradeAmount = $task_data['data']['tradeAmount'];
             $tradeRemark = $task_data['data']['tradeRemark'];
@@ -31,8 +31,9 @@ $task_worker->onMessage = function($connection, $task_data) {
             }
             $landid = $task_data['data']['landid'];
             $payTime = $task_data['data']['payTime'];
-            file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-接收到APP返回内容，准备查询系统订单-' . $tradeNo . '-----' . $tradeAmount . '-----' . PHP_EOL, FILE_APPEND);
+            file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-接收到APP返回内容，准备查询系统订单-' . $tradeNo . '-----' . $tradeAmount . '-----'. $tradeRemark . PHP_EOL, FILE_APPEND);
             $state = send_orders($payc, $tradeNo, $tradeAmount, $tradeRemark, $payTime, $landid);
+            $task_result = [];
             if ($state['state'] == "ok") {
                 $task_result['state'] = "ok";
             } else if ($state['state'] == "abnormal") {
@@ -61,52 +62,21 @@ function send_orders($payc, $tradeNo, $tradeAmount, $tradeRemark, $payTime, $lan
     //检测到无订单信息，不做任何操作直接返回未通知到
     //errot_type 1:正常订单，但未能正常更新订单状态  2：订单已超时导致不能更新订单状态
     //ab_orders表为存储因备注信息不正确导致的无法查找到系统内存在的订单信息
-    $query = $db->query("select * from mi_takes where orderNo='{$tradeNo}' order by id desc limit 1");
+    $query = $db->query("select * from sk_order where remark='{$tradeNo}' order by id desc limit 1");
     if (empty(count($query))) {
-        if ($payc == "26") {
-            $row = $db->query("select * from mi_takes where money='{$tradeAmount}' and payc={$payc} and state=1 and land_id={$landid} order by id desc limit 1");
+        if ($payc == "303") {
+            $row = $db->query("select * from sk_order where money={$tradeAmount} and ptype={$payc} and pay_status<3 and ma_id={$landid} order by id desc limit 1");
         }
         file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-第三方订单号：' . $tradeNo . ' 查询结果-' . json_encode($row) . '-----' . PHP_EOL, FILE_APPEND);
         if (count($row)) {
             $row = $row[0];
-            $poundage = get_orderFee($row['userid'], $row['payc'], $db);
-            $fee = $row['money'] * ($poundage / 100);      //手续费
-            $payment = $row['money'] - $fee;               //商户应得
-            if (!empty($row['agentid'])) {
-                $agent_poundage = get_agentFee($row['agentid'], $row['payc'], $db);
-                $agent_payment = $row['money'] * ($agent_poundage / 100);
-            } else {
-                $agent_poundage = 0;
-                $agent_payment = 0;
-            }
-            $profit = $fee - $agent_payment; //平台利润由用户手续费减去代理提成
-            $insert = $db->insert('mi_orders')->cols(array(
-                        'land_id' => $row['land_id'],
-                        'userid' => $row['userid'],
-                        'num' => $row['num'],
-                        'money' => $row['money'],
-                        'remark' => $row['mark'],
-                        'payc' => $row['payc'],
-                        'order_time' => $payTime,
-                        'api_state' => 1,
-                        'http' => '还未请求',
-                        'request_time' => 0,
-                        'payment' => $payment, //用户手续费
-                        'agent_payment' => $agent_payment, //代理提成
-                        'profit' => $profit, //平台利润由用户手续费减去代理提成
-                        'takes_id' => $row['id'],
-                        'orderNo' => $tradeNo,
-                        'type' => $row['type'],
-                        'agentid' => $row['agentid'],
-                        'version' => $row['version']
-                    ))->query();
 
-            if ($insert > 0) {
-                $update = $db->query("UPDATE mi_takes set `state` = '2',pay_time='{$payTime}',orderNo='{$tradeNo}' WHERE id = {$row['id']}");   //修改订单状态
+            if (1) {
+                $update = $db->query("UPDATE sk_order set pay_status=9,pay_time='{$payTime}',remark='{$tradeNo}' WHERE id = {$row['id']}");   //修改订单状态
                 file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-第三方订单号： ' . $tradeNo . ' 系统订单号： ' . $row['num'] . ' 订单金额：' . $row['money'] . ' 写入数据库成功-----' . PHP_EOL, FILE_APPEND);
                 if ($update > 0 && $tradeNo != "" && $tradeNo != null) {
                     $file = 'AppUserChargeHistory.log';
-                    file_put_contents($path . $file, date('Y-m-d H:i:s') . '-系统订单号：' . $tradeNo . ' 订单金额：' . $row['money'] . ' 用户所得：' . $payment . ' -代理所得：' . $agent_payment . ' -系统所得：' . $profit . '-----' . PHP_EOL, FILE_APPEND);
+                    file_put_contents($path . $file, date('Y-m-d H:i:s') . '-系统订单号：' . $tradeNo . ' 订单金额：' . $row['money'] .  '-----' . PHP_EOL, FILE_APPEND);
                     //创建订单
 //                    if ($row['payc'] == 26) {
 //                        $qrcode_info = $row['info'];
@@ -232,12 +202,12 @@ function APP_Reback($landid, $userid, $num, $remark, $db) {
     //if (!is_array($land[0]))
     //    echo ('please open the monitor');
     //如果已经开启了监控，查询账户余额
-    $user = $db->select('*')->from("mi_users")->where("id={$userid}")->query();
+    $user = $db->select('*')->from("sys_user")->where("id={$userid}")->query();
     if ($user[0]['balance'] <= 0) {
         echo ('please recharge');
     } else {
         //开始查询收款订单 { 得到请求列表 }
-        $order = $db->select('*')->from("mi_orders")->where("land_id={$landid} and userid={$userid} and api_state=1 and num='{$num}' and remark='{$remark}'")->query();
+        $order = $db->select('*')->from("sk_order")->where("ma_id={$landid} and uid={$userid} and order_sn='{$num}' and remark='{$remark}'")->query();
         if (!is_array($order[0])) {
             echo ('temporary no request');
         } else {
