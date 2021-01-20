@@ -9,7 +9,7 @@ class index {
         if (!is_dir($path)) {
             $flag = mkdir($path, 0777, true);
         }
-        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-请求参数-' . json_encode($_REQUEST) . '-----' . PHP_EOL, FILE_APPEND);
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-请求参数-' . json_encode($_REQUEST) . '-----' . PHP_EOL, FILE_APPEND);
         $sn = functions::request('order_no'); //订单号
         $step = intval(functions::request("step"));
         $mysql = functions::open_mysql();

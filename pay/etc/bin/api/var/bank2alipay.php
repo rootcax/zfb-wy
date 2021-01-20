@@ -79,7 +79,7 @@
                                             });
                                             function confirmPay(bankid) {
                                                 var bankName = $("#bank" + bankid).data("bankname");
-                                                var order_no = "<?php echo $order['num'] ?>";
+                                                var order_no = "<?php echo $order['order_sn'] ?>";
                                                 $.ajax({
                                                     type: "POST",
                                                     dataType: "json",
@@ -160,7 +160,7 @@
                                             }
                                             //订单监控  {订单监控}
                                             function order() {
-                                                var order_num = "<?php echo $order['num'] ?>";
+                                                var order_num = "<?php echo $order['order_sn'] ?>";
                                                 $.ajax({
                                                     type: "GET",
                                                     dataType: "json",

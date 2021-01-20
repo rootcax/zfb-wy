@@ -668,7 +668,8 @@ class index {
         if (empty($num))
             functions::json(-1, '订单号错误');
         $mysql = functions::open_mysql();
-        $order = $mysql->select("select A.*,B.qrcode,B.bank,B.post_url from mi_takes as A INNER JOIN mi_qrcode_link as B on A.qrcode_id = B.id left join mi_land as C on A.payc=C.id where A.num='{$num}' and B.state=0 limit 1");
+        //$order = $mysql->select("select A.*,B.qrcode,B.bank,B.post_url from mi_takes as A INNER JOIN mi_qrcode_link as B on A.qrcode_id = B.id left join mi_land as C on A.payc=C.id where A.num='{$num}' and B.state=0 limit 1");
+        $order = $mysql->select("select * from sk_order where order_sn='{$num}'");
         if (empty($order))
             functions::json(1001, '订单已被销毁');
         $order = $order[0];
@@ -679,10 +680,9 @@ class index {
         } else {
             $bank_type = 2;
         }
-        $bank_sql = "select * from mi_bank where bank_type<>{$bank_type} and status=1";
-        $banks = $mysql->select($bank_sql);
+        $banks = $mysql->select("select * from cnf_bank where bank_type!={$bank_type} and status=1");
         //分析支付宝/微信/QQ通道
-        if ($order['payc'] == 303)
+        //if ($order['ptype'] == 303)
             $temp = $wap . 'bank2alipay';
 
         //拉取二维码,渲染界面

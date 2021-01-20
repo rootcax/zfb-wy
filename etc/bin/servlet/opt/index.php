@@ -555,13 +555,11 @@ class index {
         $typec = functions::request('typec');
         $qrcode = $_REQUEST['qrcode'];
         $bank_name = $_REQUEST['bank_name'];
-        //$qrcode = str_replace(' ', '+', $qrcode);
-        //$qrcode = str_replace('\t', '+', $qrcode);
-        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-h5_link-' . $h5_link . '-----' . PHP_EOL, FILE_APPEND);
-        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-qrcode-' . $qrcode . '-----' . PHP_EOL, FILE_APPEND);
-        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-remark-' . $remark . '-----' . PHP_EOL, FILE_APPEND);
-        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-state-' . $state . '-----' . PHP_EOL, FILE_APPEND);
-        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-bank_name-' . $bank_name . '-----' . PHP_EOL, FILE_APPEND);
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-h5_link-' . $h5_link . '-----' . PHP_EOL, FILE_APPEND);
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-qrcode-' . $qrcode . '-----' . PHP_EOL, FILE_APPEND);
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-remark-' . $remark . '-----' . PHP_EOL, FILE_APPEND);
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-state-' . $state . '-----' . PHP_EOL, FILE_APPEND);
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-bank_name-' . $bank_name . '-----' . PHP_EOL, FILE_APPEND);
 
         if ($qrcode != "" && $qrcode != null) {
             $mysql = functions::open_mysql();
