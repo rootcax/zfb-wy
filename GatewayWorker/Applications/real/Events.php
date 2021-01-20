@@ -155,7 +155,7 @@ class Events {
                                     $row_count = $db->query("UPDATE sk_order SET ma_qrcode='{$qrcode}',post_url='{$post_url}' WHERE order_sn='{$remark}'");
                                 }
                             } else {
-                                $row_count = $db->query("UPDATE sk_order SET ma_qrcode_status={$state},ma_qrcode='{$qrcode}',post_url='{$post_url}' WHERE order_sn='{$remark}'");
+                                $row_count = $db->query("UPDATE sk_order SET ma_qrcode_status={$state},ma_qrcode='{$qrcode}',post_url='{$post_url}' WHERE order_sn='{$remark}' and ma_qrcode_status<3");
                             }
 
                             if ($row_count) {

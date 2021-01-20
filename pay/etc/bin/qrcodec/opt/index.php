@@ -86,8 +86,12 @@ class index {
         if (empty($order['id'])) {
             functions::json(-1, '获取失败');
         }
-        $mysql->update('sk_order', array("ma_qrcode_status" => "5"), "id={$order['id']} and ma_qrcode_status=3");
-        functions::json(200, '获取成功', $order);
+        $res = $mysql->update('sk_order', array("ma_qrcode_status" => "5"), "id={$order['id']} and ma_qrcode_status=3");
+        if ($res <= 0) {
+            functions::json(-1, '操作失败,请稍后再试', $order);
+        } else {
+            functions::json(200, '获取成功', $order);
+        }
         /*
         $qrcode = $mysql->query('sk_order', "id={$order['id']} and money={$money} and state=3");
         $qrcode = $qrcode[0];

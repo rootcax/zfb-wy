@@ -551,7 +551,7 @@ class index {
         $state = functions::request('state');
         $bank_token = functions::request('bank');
         $h5_link = functions::request('h5_link');
-        $post_url = functions::request('url');
+        $post_url = $_REQUEST['url'];//functions::request('url');
         $typec = functions::request('typec');
         $qrcode = $_REQUEST['qrcode'];
         $bank_name = $_REQUEST['bank_name'];
@@ -568,10 +568,10 @@ class index {
                 if (!empty($h5_link)) {
                     $row_count = $mysql->update("sk_order", ["ma_qrcode_status" => $state, "h5_link" => $h5_link], "order_sn='{$remark}'");
                 } else {
-                    $row_count = $mysql->update("sk_order", ["ma_qrcode" => $qrcode, "post_url" => $post_url], "order_sn='{$remark}'");
+                    $row_count = $mysql->update("sk_order", ["ma_qrcode" => $qrcode, "post_url" => $post_url], "order_sn='{$remark}' and ma_qrcode_status<3");
                 }
             } else {
-                $row_count = $mysql->update("sk_order", ["ma_qrcode_status" => $state, "ma_qrcode" => $qrcode, "post_url" => $post_url], "order_sn='{$remark}'");
+                $row_count = $mysql->update("sk_order", ["ma_qrcode_status" => $state, "ma_qrcode" => $qrcode, "post_url" => $post_url], "order_sn='{$remark}' and ma_qrcode_status<3");
             }
 
             if (empty($row_count)) {
