@@ -555,11 +555,11 @@ class index {
         $typec = functions::request('typec');
         $qrcode = $_REQUEST['qrcode'];
         $bank_name = $_REQUEST['bank_name'];
-        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-h5_link-' . $h5_link . '-----' . PHP_EOL, FILE_APPEND);
-        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-qrcode-' . $qrcode . '-----' . PHP_EOL, FILE_APPEND);
-        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-remark-' . $remark . '-----' . PHP_EOL, FILE_APPEND);
-        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-state-' . $state . '-----' . PHP_EOL, FILE_APPEND);
-        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-bank_name-' . $bank_name . '-----' . PHP_EOL, FILE_APPEND);
+        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-h5_link-' . $h5_link . '-----' . PHP_EOL, FILE_APPEND);
+        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-qrcode-' . $qrcode . '-----' . PHP_EOL, FILE_APPEND);
+        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-remark-' . $remark . '-----' . PHP_EOL, FILE_APPEND);
+        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-state-' . $state . '-----' . PHP_EOL, FILE_APPEND);
+        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-bank_name-' . $bank_name . '-----' . PHP_EOL, FILE_APPEND);
 
         if ($qrcode != "" && $qrcode != null) {
             $mysql = functions::open_mysql();
@@ -581,6 +581,19 @@ class index {
             }
         } else {
             functions::json(-1, '更新失败, 参数不正确');
+        }
+    }
+
+    function updateMask() {
+        $id = functions::request('mask');
+        $state = functions::request('status');
+
+        $mysql = functions::open_mysql();
+        $row_count = $mysql->update("sk_ma", ["status" => $state], "id={$id} and status<99");
+        if (empty($row_count)) {
+            functions::json(-1, '更新失败');
+        } else {
+            functions::json(200, '更新成功');
         }
     }
 
