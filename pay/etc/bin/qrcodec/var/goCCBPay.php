@@ -79,6 +79,7 @@
             </div>
         </div>
         <script src="<?php echo _pub ?>js/jquery.min.js"></script>
+        <script src="<?php echo _pub ?>layui/layui.all.js"></script>
         <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
         <script src="<?php echo _pub ?>js/admin.js"></script>
 

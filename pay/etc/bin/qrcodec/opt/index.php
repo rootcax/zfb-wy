@@ -9,22 +9,30 @@ class index {
         if (!is_dir($path)) {
             $flag = mkdir($path, 0777, true);
         }
-        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-请求参数-' . json_encode($_REQUEST) . '-----' . PHP_EOL, FILE_APPEND);
-        $sn = functions::request('order_no'); //订单号
+        $now_time = time();
+        $sn = functions::request('order_sn'); //订单号
         $step = intval(functions::request("step"));
+
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-请求参数-' . json_encode($_REQUEST) . '-----' . PHP_EOL, FILE_APPEND);
         $mysql = functions::open_mysql();
-        $state = 5;
+        $state = 3;
         if ($step == 1) {
             $state = 0;
+        } else if ($step == 2) {
+            $state = 5;
         }
         //$order = $mysql->select("select A.*,B.qrcode,B.bank,B.post_url,B.h5_link,C.bank_token,C.bank_name from mi_takes as A INNER JOIN mi_qrcode_link as B on A.qrcode_id = B.id left join mi_bank as C on A.bank_code=C.bank_code where A.num='{$num}' and B.state={$state} limit 1");
-        $order = $mysql->select("select log.*,b.bank_name,b.bank_token,b.bank_code from sk_order log left join cnf_bank b on log.ma_bank_id=b.id where order_sn='{$sn}' and ma_qrcode_status={$state}");
+        $order = $mysql->select("select log.*,b.bank_name,b.bank_token,b.bank_code,prev.h5_link,prev.post_url,prev.qrcode,prev.create_qrcode_status 
+                                from sk_order log 
+                                left join cnf_bank b on log.ma_bank_id=b.id 
+                                left join sk_order_prev prev on log.order_sn=prev.order_sn 
+                                where log.order_sn='{$sn}' and prev.qr_status={$state} and prev.over_time>{$now_time}");
         if (empty($order)) {
             functions::json(1001, '订单已被销毁');
         }
         $order = $order[0];
         if ($step == 1) {
-            if ($order['ma_qrcode_status'] == 0) {
+            if ($order['create_qrcode_status'] == 1) {
                 /*
                 $qrcode_array['state'] = 0;
                 $qrcode_array['userid'] = $order['muid'];
@@ -47,15 +55,15 @@ class index {
                 $data['type'] = "qrcodec";
                 // 发送数据，注意8991端口是Text协议的端口，Text协议需要在数据末尾加上换行符
                 fwrite($client, json_encode($data) . "\n");
-                $mysql->update("sk_order", ["ma_qrcode_status" => 1], "id={$order['id']}");
                 */
-            }else if ($order['ma_qrcode_status'] == 1) {
-                functions::json(1001, '请勿重复提交');
+                $mysql->update("sk_order_prev", ["create_qrcode_status" => 2], "order_sn='{$sn}' and create_qrcode_status=1");
+            } else if ($order['create_qrcode_status'] == 2) {
+                //functions::json(1001, '请勿重复提交');
             }
             functions::import_var('create_qrcode', ['data' => $order]);
 
         } else if ($step == 2) {
-            if ($order['ma_qrcode'] != "" && $order['post_url'] != "") {
+            if ($order['qrcode'] != "" && $order['post_url'] != "") {
                 if ($order['bank_code'] == "CCB" && functions::isMobile()) {
                     functions::import_var('goCCBPay', array('data' => $order));
                 } else {
@@ -78,7 +86,7 @@ class index {
         if (empty($num))
             functions::json(-1, '订单号错误');
         $mysql = functions::open_mysql();
-        $order = $mysql->query('sk_order', "order_sn='{$num}'");
+        $order = $mysql->query('sk_order_prev', "order_sn='{$num}'");
         $order = $order[0];
         $money = floatval($order['money']);
         if (!is_array($order))
@@ -86,8 +94,8 @@ class index {
         if (empty($order['id'])) {
             functions::json(-1, '获取失败');
         }
-        $res = $mysql->update('sk_order', array("ma_qrcode_status" => "5"), "id={$order['id']} and ma_qrcode_status=3");
-        if ($res <= 0) {
+        $res = $mysql->update('sk_order_prev', ["qr_status" => 5], "id={$order['id']} and qr_status=3");
+        if (!$res) {
             functions::json(-1, '操作失败,请稍后再试', $order);
         } else {
             functions::json(200, '获取成功', $order);

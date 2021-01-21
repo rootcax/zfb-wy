@@ -626,7 +626,7 @@ class index {
             functions::json(1001, '订单不存在');
         }
         if ($num != '' && $num != null) {
-            $where = "num='{$num}'";
+            $where = "order_sn='{$num}'";
             if ($tradeno != '' && $tradeno != null) {
                 $where = $where . " and info='{$tradeno}'";
             }
@@ -637,7 +637,7 @@ class index {
         }
 
         $mysql = functions::open_mysql();
-        $order = $mysql->select("SELECT state FROM mi_takes where {$where}");
+        $order = $mysql->select("SELECT * FROM sk_order where {$where}");
         $order = $order[0];
         if (!is_array($order)) {
             functions::json(1001, '订单已被销毁');
@@ -645,6 +645,7 @@ class index {
         }
 
         //检测订单是否超时
+        /*
         if ($order['payc'] == 5 || $order['payc'] == 6) {
             $time = 120;
         } else {
@@ -653,14 +654,14 @@ class index {
             } else {
                 $time = 270;
             }
-        }
+        }*/
 
-        if ($order['state'] == 3)
-            functions::json(1002, '订单已经超时', $order['num']);
-        if ($order['state'] == 2)
-            functions::json(200, '支付成功', $order['num']);
-        if ($order['state'] == 1)
-            functions::json(1003, '订单未支付', $order['num']);
+        if ($order['over_time'] < time())
+            functions::json(1002, '订单已经超时', $order['order_sn']);
+        if ($order['pay_status'] == 9)
+            functions::json(200, '支付成功', $order['order_sn']);
+        if ($order['pay_status'] < 3)
+            functions::json(1003, '订单未支付', $order['order_sn']);
     }
 
     function cashier() {

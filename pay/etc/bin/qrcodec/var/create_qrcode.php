@@ -98,9 +98,9 @@
                 },
                 success: function (res) {
                     if (res.code == 200) {
-                        var qrData = res.data.ma_qrcode;
+                        var qrData = res.data.qrcode;
                         if (qrData != null && qrData != "") {
-                            window.location.href = "/pay/qrcode.php?order_no=" + orderId + "&step=" + nextHeadStep;
+                            window.location.href = "/pay/qrcode.php?order_sn=" + orderId + "&step=" + nextHeadStep;
                         }
                     }
                     //获取二维码超时

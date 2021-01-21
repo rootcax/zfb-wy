@@ -229,6 +229,7 @@ class index {
 
     //自动回调
     function Refer() {
+        /*
         ini_set('max_execution_time', '0');
         $mysql = functions::open_mysql();
         //用户id
@@ -239,6 +240,7 @@ class index {
         $user = $mysql->query("users", "id={$takes[0]['userid']}");
         //开始回调
         functions::api('reback')->refer($mysql, $takes[0], $user[0]);
+        */
     }
 
     //设置账号(2018-11-21修改)
@@ -511,14 +513,22 @@ class index {
     }
 
     function getNewOrder() {
+        $now_time = time();
         $ma_id = functions::request('id');
         $mysql = functions::open_mysql();
-        $order = $mysql->select("select log.*,b.bank_name,b.bank_token,b.bank_code from sk_order log left join cnf_bank b on log.ma_bank_id=b.id where ma_id={$ma_id} and ma_qrcode_status=0");
+        $order = $mysql->select("select log.*,b.bank_name,b.bank_token,b.bank_code 
+                        from sk_order log 
+                        left join cnf_bank b on log.ma_bank_id=b.id 
+                        left join sk_order_prev prev on log.order_sn=prev.order_sn 
+                        where log.ma_id={$ma_id} and prev.state=0 and prev.create_qrcode_status=2 and prev.over_time>{$now_time}");
         if (empty($order)) {
             functions::json(-3, '暂时还没有订单');
         }
         $order = $order[0];
-        $mysql->update("sk_order", ["ma_qrcode_status" => 1], "id={$order['id']}");
+        $res = $mysql->update("sk_order_prev", ["state" => 1], "order_sn='{$order['order_sn']}'");
+        if (!$res) {
+            functions::json(-1, '获取订单状态失败');
+        }
 
         $qrcode_array['state'] = 0;
         $qrcode_array['userid'] = $order['muid'];
@@ -555,23 +565,31 @@ class index {
         $typec = functions::request('typec');
         $qrcode = $_REQUEST['qrcode'];
         $bank_name = $_REQUEST['bank_name'];
-        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-h5_link-' . $h5_link . '-----' . PHP_EOL, FILE_APPEND);
-        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-qrcode-' . $qrcode . '-----' . PHP_EOL, FILE_APPEND);
-        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-remark-' . $remark . '-----' . PHP_EOL, FILE_APPEND);
-        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-state-' . $state . '-----' . PHP_EOL, FILE_APPEND);
-        file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-bank_name-' . $bank_name . '-----' . PHP_EOL, FILE_APPEND);
+
+        $mysql = functions::open_mysql();
+        $banks = $mysql->select("select * from cnf_bank where bank_token='{$bank_token}'");
+        if (empty($banks)) {
+            functions::json(-1, '更新失败, 银行信息查询失败');
+        }
+        $bank = $banks[0];
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '----begin to update qrcode----' . $bank_name . '-----' . PHP_EOL, FILE_APPEND);
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-h5_link-' . $h5_link . '-----' . PHP_EOL, FILE_APPEND);
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-qrcode-' . substr($qrcode, 0, 20) . '-----' . PHP_EOL, FILE_APPEND);
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-bank-' . $bank_token . '-----' . PHP_EOL, FILE_APPEND);
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '-state-' . $state . '-----' . PHP_EOL, FILE_APPEND);
+        //file_put_contents($path . $filename, date('Y-m-d H:i:s') . '----end to update qrcode----' . $bank_name . '-----' . PHP_EOL. PHP_EOL. PHP_EOL, FILE_APPEND);
 
         if ($qrcode != "" && $qrcode != null) {
             $mysql = functions::open_mysql();
             $row_count = 0;
-            if ($bank_name == "招商银行" || $bank_name == "中国建设银行") {
+            if ($bank['bank_code'] == "CCB" || $bank['bank_code'] =="CMB") {
                 if (!empty($h5_link)) {
-                    $row_count = $mysql->update("sk_order", ["ma_qrcode_status" => $state, "h5_link" => $h5_link], "order_sn='{$remark}'");
+                    $row_count = $mysql->update("sk_order_prev", ["qr_status" => $state, "h5_link" => $h5_link], "order_sn='{$remark}'");
                 } else {
-                    $row_count = $mysql->update("sk_order", ["ma_qrcode" => $qrcode, "post_url" => $post_url], "order_sn='{$remark}' and ma_qrcode_status<3");
+                    $row_count = $mysql->update("sk_order_prev", ["qrcode" => $qrcode, "post_url" => $post_url], "order_sn='{$remark}' and qr_status=0");
                 }
             } else {
-                $row_count = $mysql->update("sk_order", ["ma_qrcode_status" => $state, "ma_qrcode" => $qrcode, "post_url" => $post_url], "order_sn='{$remark}' and ma_qrcode_status<3");
+                $row_count = $mysql->update("sk_order_prev", ["qr_status" => $state, "qrcode" => $qrcode, "post_url" => $post_url], "order_sn='{$remark}' and qr_status=0");
             }
 
             if (empty($row_count)) {

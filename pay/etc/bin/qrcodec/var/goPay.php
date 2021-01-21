@@ -20,7 +20,7 @@
     </script>
     <body onload='sub()'>
         <form name="myForm" method="POST" action="<?php echo $data['post_url'] ?>">
-            <input type="hidden" name="epccGwMsg" value="<?php echo $data['ma_qrcode'] ?>" />
+            <input type="hidden" name="epccGwMsg" value="<?php echo $data['qrcode'] ?>" />
         </form>
     </body>
 </html>
