@@ -515,7 +515,12 @@ class index {
     function getNewOrder() {
         $now_time = time();
         $ma_id = functions::request('id');
+        $pulse = functions::request('pulse');
         $mysql = functions::open_mysql();
+        if (!empty($pulse)) {
+            $mysql->update("sk_ma", ["last_pulse" => time()], "id='{$ma_id}' and status=2");
+        }
+
         $order = $mysql->select("select log.*,b.bank_name,b.bank_token,b.bank_code 
                         from sk_order log 
                         left join cnf_bank b on log.ma_bank_id=b.id 
